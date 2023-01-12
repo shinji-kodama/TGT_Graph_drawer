@@ -33,16 +33,17 @@ options = webdriver.ChromeOptions()
 
 def main():
     driver = open_chrome()
-    fig, ls, x, ys, ls_h = init_graph(len(clustors) * aisle_num)
+    fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clustors) * aisle_num)
+
+    move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
+    enter_iframe(driver, iframe_css)
 
     while True:
         # driver.refresh()
-        move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
-        enter_iframe(driver, iframe_css)
         times = get_clustors_times(driver, clustor_css)
         for i in range(times):
             print("times: ", i, "/", times, "draw_graph ...")
-            draw_graph(driver, ls, ls_h, x, ys, i)
+            draw_graph(driver, ls, ls_i, ls_h, x, ys, i)
 
 def open_chrome():
     driver = webdriver.Chrome()
@@ -177,20 +178,25 @@ def init_graph(length):
     # 初期値をここでセット
     x  = [0]
     ys = [[0] for _ in range(length)]
+    x_i = [0]
+    ys_i = [[0] for _ in range(length)]
     x_h = [-10, 1]
     y_h = [10, 10]
 
     ls = []
+    ls_i = []
     ls_h = []
     for i in range(length):
-        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="black")
-        lines2, = axs[i].plot(x_h, y_h, linewidth=1, marker=".", markersize=1, color="gray", linestyle="dashed")
+        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="red")
+        lines_i, = axs[i].plot(x_i, ys_i[i], linewidth=1, marker=".", markersize=4, color="blue", linestyle="dotted")
+        lines_h, = axs[i].plot(x_h, y_h, linewidth=1, marker=".", markersize=1, color="gray", linestyle="dashed")
         ls.append(lines)
-        ls_h.append(lines2)
+        ls_i.append(lines_i)
+        ls_h.append(lines_h)
     
-    return fig, ls, x, ys, ls_h
+    return fig, ls, ls_i, ls_h, x, ys
 
-def draw_graph(driver, ls, ls_h, x, ys, i):
+def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
 
     clustor = select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i)
     if clustor is None:
@@ -250,6 +256,7 @@ def draw_graph(driver, ls, ls_h, x, ys, i):
         print("x", idx, ":", x)
         print("y", idx, ":", history["dtotal_by_dt"][idx])
         ls[idx].set_data(x, history["dtotal_by_dt"][idx])
+        ls_i[idx].set_data(x, history["inducted"][idx])
 
     plt.pause(0.1)
 
