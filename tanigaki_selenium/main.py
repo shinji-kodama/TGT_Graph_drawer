@@ -151,15 +151,15 @@ def click_back_btn(driver, back_css):
 
 def init_graph(length):
     
-    fig = plt.figure(figsize=(16, 8))
+    fig = plt.figure(figsize=(18, 8))
     plt.subplots_adjust(wspace=0, hspace=0, top=0.95, right=0.95, bottom=0.05, left=0.05)
 
     axs = []
     #length個数分のグラフを設定
     for i in range(length):
-        ax = fig.add_subplot(12, 22, i+1)
-        ax.set_ylim(-5, 20)
-        ax.set_xlim(-8, 2)
+        ax = fig.add_subplot(12, 22, (22 * int(i/22)) + 22 - i)
+        ax.set_ylim(0, 15)
+        ax.set_xlim(-10, 1)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 0:
@@ -167,8 +167,8 @@ def init_graph(length):
             ax.set_ylabel(clustors[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= 11 * 22:
-            ax.set_xticks([-4, 0])
-            ax.set_xlabel("time" + str(i - 11 * 22 + 1))
+            ax.set_xticks([-8, -4, 0])
+            ax.set_xlabel(str(22 * 12 - i))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
@@ -246,10 +246,7 @@ def draw_graph(driver, ls, x, ys, i):
         print("y", idx, ":", history["dtotal_by_dt"][idx])
         ls[idx].set_data(x, history["dtotal_by_dt"][idx])
 
-
-
     plt.pause(0.1)
-
 
 if __name__ == "__main__":
     main()
