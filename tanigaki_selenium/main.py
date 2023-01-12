@@ -209,6 +209,7 @@ def draw_graph(driver, ls, x, ys, i):
         el_stowed  = int(stowed[j])
         el_total = el_inducted + el_stowed
 
+        print("history [dtotal_by_dt] length", len(history["dtotal_by_dt"][idx]))
         result = 0 if len(history["dtotal_by_dt"][idx]) == 0 else history["dtotal_by_dt"][idx][-1]
 
         if len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0:
