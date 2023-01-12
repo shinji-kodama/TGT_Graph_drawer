@@ -33,16 +33,16 @@ options = webdriver.ChromeOptions()
 
 def main():
     driver = open_chrome()
-    fig, ls, x, ys = init_graph(len(clustors) * aisle_num)
+    fig, ls, x, ys, ls_h = init_graph(len(clustors) * aisle_num)
 
     while True:
-        driver.refresh()
+        # driver.refresh()
         move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
         enter_iframe(driver, iframe_css)
         times = get_clustors_times(driver, clustor_css)
         for i in range(times):
             print("times: ", i, "/", times, "draw_graph ...")
-            draw_graph(driver, ls, x, ys, i)
+            draw_graph(driver, ls, ls_h, x, ys, i)
 
 def open_chrome():
     driver = webdriver.Chrome()
@@ -157,35 +157,40 @@ def init_graph(length):
     axs = []
     #length個数分のグラフを設定
     for i in range(length):
-        ax = fig.add_subplot(12, 22, (22 * int(i/22)) + 22 - i)
+        ax = fig.add_subplot(12, 22, (22 * int(i/22)) + 22 - (i % 22))
         ax.set_ylim(0, 15)
         ax.set_xlim(-10, 1)
         ax.set_xticks([])
         ax.set_yticks([])
-        if i % 22 == 0:
+        if i % 22 == 21:
             ax.set_yticks([0,10])
             ax.set_ylabel(clustors[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= 11 * 22:
             ax.set_xticks([-8, -4, 0])
-            ax.set_xlabel(str(22 * 12 - i))
+            ax.set_xlabel(str(i - 22 * 11 + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
 
 
     # 初期値をここでセット
-    x  = [[i] for i in range(11)]
-    ys = [[0] * 11 for _ in range(length)]
+    x  = [0]
+    ys = [[0] for _ in range(length)]
+    x_h = [-10, 1]
+    y_h = [10, 10]
 
     ls = []
+    ls_h = []
     for i in range(length):
-        lines, = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="black")
+        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="black")
+        lines2, = axs[i].plot(x_h, y_h, linewidth=1, marker=".", markersize=1, color="gray", linestyle="dashed")
         ls.append(lines)
+        ls_h.append(lines2)
     
-    return fig, ls, x, ys
+    return fig, ls, x, ys, ls_h
 
-def draw_graph(driver, ls, x, ys, i):
+def draw_graph(driver, ls, ls_h, x, ys, i):
 
     clustor = select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i)
     if clustor is None:
