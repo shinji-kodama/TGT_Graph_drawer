@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "tanigaki-selenium"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "tanigaki_selenium"}]
+
+[tool.poetry.scripts]
+my-script = "tanigaki_selenium:main"
+
+[tool.poetry.dependencies]
+python = "^3.11, <3.12"
+selenium = "^4.7.2"
+chromedriver-binary = "108.0.5359.71.0"
+pyinstaller = "^5.7.0"
+openpyxl = "^3.0.10"
+notebook = "^6.5.2"
+matplotlib = "^3.6.2"
+pandas = "^1.5.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
