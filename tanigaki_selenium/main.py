@@ -33,7 +33,6 @@ options = webdriver.ChromeOptions()
 
 def main():
     driver = open_chrome()
-    print(init_graph)
     fig, ls, x, ys = init_graph(len(clustors) * aisle_num)
 
     while True:
@@ -63,21 +62,18 @@ def get_element_in_iframe(driver, iframe, css):
     result = []
     for i, el in enumerate(elements):
         if i % 3 == 1:
-            # print(el.text)
             result.append(el.text)
 
     driver.switch_to.default_content()
     return result
 
 def move_to_stow_breakdown(driver, iframe_css, elem_css):
-    print("----- move_to_stow_breakdown -------")
 
     enter_iframe(driver, iframe_css)
     elements = get_elems_by_css(driver, elem_css, 10)
 
     for el in elements:
         span = el.find_element(By.CSS_SELECTOR, "span")
-        # print("move_to_stow_breakdown, span", span.text)
         if span.text == "Stow Breakdown":
             time.sleep(3)
             el.click()
@@ -91,7 +87,6 @@ def enter_iframe(driver, iframe_css):
 
 def get_clustors_times(driver, clustor_css):
     try:
-        print("----- get_clustors_times -------")
         times = len(get_elems_by_css(driver, clustor_css, 5))
         return times
     except Exception as e:
@@ -124,11 +119,9 @@ def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
         click_back_btn(driver, back_css)
         return dict
     else:
-        print("select_cluster: Total行をskip中 ...")
         return None
 
 def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
-    print("---------- get_aisle_and_values !! ----------")
     time.sleep(2)
     aisle_els = get_elems_by_css(driver, aisle_css, 10)
     aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
@@ -160,16 +153,16 @@ def init_graph(length):
     #length個数分のグラフを設定
     for i in range(length):
         ax = fig.add_subplot(12, 22, i+1)
-        ax.set_ylim(-10, 100)
-        ax.set_xlim(-20, 2)
+        ax.set_ylim(-5, 20)
+        ax.set_xlim(-8, 2)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 0:
-            ax.set_yticks([0,30,60])
+            ax.set_yticks([0,10])
             ax.set_ylabel(clustors[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= 11 * 22:
-            ax.set_xticks([-16, -8, 0])
+            ax.set_xticks([-4, 0])
             ax.set_xlabel("time" + str(i - 11 * 22 + 1))
         # ax.grid(True)
         axs.append(ax)
@@ -210,12 +203,9 @@ def draw_graph(driver, ls, x, ys, i):
         el_stowed  = int(stowed[j])
         el_total = el_inducted + el_stowed
 
-        print("history [dtotal_by_dt] length", len(history["dtotal_by_dt"][idx]))
         result = 0 if len(history["dtotal_by_dt"][idx]) == 0 else history["dtotal_by_dt"][idx][-1]
 
         if len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0:
-            print('----- len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0 -----')
-            print("history[Datetime] 216行目 :", history["datetime"][i])
 
             previous_total    = history["total"][idx][-1]
             previous_datetime = 0
@@ -226,14 +216,6 @@ def draw_graph(driver, ls, x, ys, i):
 
             delta_total = el_total - previous_total
             delta_time  = (dt_fetch - previous_datetime).total_seconds() / 60
-
-            print("total: ", el_total)
-            print("previous: ", previous_total)
-            print("diff", delta_total)
-            print("now: ", dt_fetch)
-            print("previous: ", previous_datetime)
-            print("diff", delta_time)
-
             result = delta_total / delta_time
 
 
@@ -251,19 +233,17 @@ def draw_graph(driver, ls, x, ys, i):
         print("インダクション：", history["inducted"][idx])
         print("ストー済み:", history["stowed"][idx])
         print("時刻：", history["datetime"][i])
-        print("ｙ軸：", history["dtotal_by_dt"][idx])
 
         # ys[idx].pop(0) 
         # ys[idx].append(result)
         x = list(map(lambda t: (t - dt_fetch).total_seconds() / 60 , history["datetime"][i]))
-        print("x軸:", x)
-        print("y軸:", history["dtotal_by_dt"][idx])
 
         for l_i in range(len(ls)):
+            print("x", l_i, ":", x)
+            print("y", l_i, ":", history["dtotal_by_dt"][l_i])
             ls[l_i].set_data(x, history["dtotal_by_dt"][l_i])
 
-    print(history)
-    plt.pause(1)
+    plt.pause(0.1)
 
 
 if __name__ == "__main__":
