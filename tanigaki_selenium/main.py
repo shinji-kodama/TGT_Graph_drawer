@@ -237,11 +237,11 @@ def draw_graph(driver, ls, x, ys, i):
         # ys[idx].pop(0) 
         # ys[idx].append(result)
         x = list(map(lambda t: (t - dt_fetch).total_seconds() / 60 , history["datetime"][i]))
+        print("x", idx, ":", x)
+        print("y", idx, ":", history["dtotal_by_dt"][idx])
+        ls[idx].set_data(x, history["dtotal_by_dt"][idx])
 
-        for l_i in range(len(ls)):
-            print("x", l_i, ":", x)
-            print("y", l_i, ":", history["dtotal_by_dt"][l_i])
-            ls[l_i].set_data(x, history["dtotal_by_dt"][l_i])
+
 
     plt.pause(0.1)
 
