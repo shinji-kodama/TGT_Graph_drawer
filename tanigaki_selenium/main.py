@@ -58,9 +58,7 @@ def find_iframe(driver, css):
 
 def get_element_in_iframe(driver, iframe, css):
     driver.switch_to.frame(iframe)
-    wait = WebDriverWait(driver, 10)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
-    elements = driver.find_elements(By.CSS_SELECTOR, css)
+    elements = get_elems_by_css(driver, css, 10)
 
     result = []
     for i, el in enumerate(elements):
@@ -75,7 +73,7 @@ def move_to_stow_breakdown(driver, iframe_css, elem_css):
     print("----- move_to_stow_breakdown -------")
 
     enter_iframe(driver, iframe_css)
-    elements = get_elem_by_css(driver, elem_css, 10)
+    elements = get_elems_by_css(driver, elem_css, 10)
 
     for el in elements:
         span = el.find_element(By.CSS_SELECTOR, "span")
@@ -94,7 +92,7 @@ def enter_iframe(driver, iframe_css):
 def get_clustors_times(driver, clustor_css):
     try:
         print("----- get_clustors_times -------")
-        times = len(get_elem_by_css(driver, clustor_css, 5))
+        times = len(get_elems_by_css(driver, clustor_css, 5))
         return times
     except Exception as e:
         print("error:", e)
@@ -108,12 +106,17 @@ def get_elem_by_css(driver, css, sec):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
     return driver.find_element(By.CSS_SELECTOR, css)
 
+def get_elems_by_css(driver, css, sec):
+    wait = WebDriverWait(driver, sec)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
+    return driver.find_elements(By.CSS_SELECTOR, css)
+
 def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
-    times = len(get_elem_by_css(driver, clustor_css, 30))
+    times = len(get_elems_by_css(driver, clustor_css, 30))
     
     if i != times - 1:
         # クラスターを選択
-        els = get_elem_by_css(driver, clustor_css, 10)
+        els = get_elems_by_css(driver, clustor_css, 10)
         els[i].click()
         time.sleep(1)
         # クラスターの中のaisleの値を取得
@@ -127,8 +130,8 @@ def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
 def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
     print("---------- get_aisle_and_values !! ----------")
     time.sleep(2)
-    aisle_els = get_elem_by_css(driver, aisle_css, 10)
-    aisle_elem_els = get_elem_by_css(driver, aisle_elem_css, 10)
+    aisle_els = get_elems_by_css(driver, aisle_css, 10)
+    aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
     
     aisles      = [el.text for el in aisle_els]
     aisle_elems = [el.text for el in aisle_elem_els]
