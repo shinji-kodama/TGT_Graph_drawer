@@ -140,6 +140,7 @@ def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
 
     if aisles[0][0] != clustors[i]:
         print("Error!! skip this cluster:", clustors[i])
+        return None
     
     now = dt.datetime.now()
 
@@ -219,9 +220,9 @@ def draw_graph(driver, ls, x, ys, i):
             previous_total    = history["total"][idx][-1]
             previous_datetime = 0
             if j == 0:
-                previous_datetime = history["datetime"][i][-2]
-            else:
                 previous_datetime = history["datetime"][i][-1]
+            else:
+                previous_datetime = history["datetime"][i][-2]
 
             delta_total = el_total - previous_total
             delta_time  = (dt_fetch - previous_datetime).total_seconds() / 60
@@ -254,7 +255,7 @@ def draw_graph(driver, ls, x, ys, i):
 
         # ys[idx].pop(0) 
         # ys[idx].append(result)
-        x = list(map(lambda t: (dt_fetch - t).total_seconds() / 60 , history["datetime"][i]))
+        x = list(map(lambda t: (t - dt_fetch).total_seconds() / 60 , history["datetime"][i]))
         print("x軸:", x)
         print("y軸:", history["dtotal_by_dt"][idx])
 
