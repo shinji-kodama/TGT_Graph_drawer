@@ -18,7 +18,6 @@ aisle_css = "tbody > tr > .css-y5ti3q > span"
 aisle_elem_css = "tbody > tr > .css-af10 > span"
 back_css = ".css-44tx1c"
 
-
 clustors = ["A","B","C","D","E","G","H","J","K","L","M","P"]
 aisle_num = 22
 
@@ -39,22 +38,12 @@ def main():
 
     while True:
         driver.refresh()
-        print("move_to_stow_breakdown")
         move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
-        print("find_iframe")
-        iframe = find_iframe(driver, iframe_css)
-
-        print("switch_to_iframe")
-        driver.switch_to.frame(iframe)
-        print("wait 30 sec...")
-        wait = WebDriverWait(driver, 30)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, clustor_css)))
-        print("wait 30 sec... done")
-        times = len(driver.find_elements(By.CSS_SELECTOR, clustor_css))
+        enter_iframe(driver, iframe_css)
+        times = get_clustors_times(driver, clustor_css)
         for i in range(times):
-            print("times: ", i, "/", times)
+            print("times: ", i, "/", times, "draw_graph ...")
             draw_graph(driver, ls, x, ys, i)
-
 
 def open_chrome():
     driver = webdriver.Chrome()
@@ -83,6 +72,8 @@ def get_element_in_iframe(driver, iframe, css):
     return result
 
 def move_to_stow_breakdown(driver, iframe_css, elem_css):
+    print("----- move_to_stow_breakdown -------")
+
     iframe = find_iframe(driver, iframe_css)
     driver.switch_to.frame(iframe)
     wait = WebDriverWait(driver, 10)
@@ -99,45 +90,46 @@ def move_to_stow_breakdown(driver, iframe_css, elem_css):
     driver.switch_to.default_content()
     time.sleep(1)
 
+def enter_iframe(driver, iframe_css):
+    iframe = find_iframe(driver, iframe_css)
+    driver.switch_to.frame(iframe)
+
+def get_clustors_times(driver, clustor_css):
+    try:
+        times = len(get_elem_by_css(driver, clustor_css, 5))
+        return times
+    except:
+        driver.refresh()
+        move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
+        enter_iframe(driver, iframe_css)
+        return get_clustors_times(driver, clustor_css)
+
+def get_elem_by_css(driver, css, sec):
+    wait = WebDriverWait(driver, sec)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
+    return driver.find_element(By.CSS_SELECTOR, css)
+
 def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
-    wait = WebDriverWait(driver, 30)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, clustor_css)))
-    times = len(driver.find_elements(By.CSS_SELECTOR, clustor_css))
+    times = len(get_elem_by_css(driver, clustor_css, 30))
     
     if i != times - 1:
-        wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, clustor_css)))
-
         # クラスターを選択
-        els = driver.find_elements(By.CSS_SELECTOR, clustor_css)
+        els = get_elem_by_css(driver, clustor_css, 10)
         els[i].click()
         time.sleep(1)
-
         # クラスターの中のaisleの値を取得
         dict = get_aisle_and_values(driver, aisle_css, aisle_elem_css, i)
-
-        # クラスター一覧に画面を戻す
         click_back_btn(driver, back_css)
-        print(dict)
-
         return dict
-    
     else:
         print("select_cluster: Total行をskip中 ...")
         return None
 
-
-
 def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
-    print("get_aisle_and_values !!")
+    print("---------- get_aisle_and_values !! ----------")
     time.sleep(2)
-    wait = WebDriverWait(driver, 30)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, aisle_css)))
-    aisle_els = driver.find_elements(By.CSS_SELECTOR, aisle_css)
-
-    wait = WebDriverWait(driver, 10)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, aisle_elem_css)))
-    aisle_elem_els = driver.find_elements(By.CSS_SELECTOR, aisle_elem_css)
+    aisle_els = get_elem_by_css(driver, aisle_css, 10)
+    aisle_elem_els = get_elem_by_css(driver, aisle_elem_css, 10)
     
     aisles      = [el.text for el in aisle_els]
     aisle_elems = [el.text for el in aisle_elem_els]
@@ -152,10 +144,7 @@ def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
     return {"aisles": aisles, "inducted": inducted, "stowed": stowed, "datetime": now }
 
 def click_back_btn(driver, back_css):
-    # print("click_back_btn", back_css)
-    wait = WebDriverWait(driver, 10)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, back_css)))
-    back_btn = driver.find_element(By.CSS_SELECTOR, back_css)
+    back_btn = get_elem_by_css(driver, back_css, 10)
     back_btn.click()
 
 
@@ -168,8 +157,8 @@ def init_graph(length):
     #length個数分のグラフを設定
     for i in range(length):
         ax = fig.add_subplot(12, 22, i+1)
-        ax.set_ylim(0, 100)
-        ax.set_xlim(-20, 0)
+        ax.set_ylim(-10, 100)
+        ax.set_xlim(-20, 2)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 0:
@@ -177,8 +166,8 @@ def init_graph(length):
             ax.set_ylabel(clustors[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= 11 * 22:
-            ax.set_xticks([-10, 0])
-            ax.set_xlabel("time")
+            ax.set_xticks([-16, -8, 0])
+            ax.set_xlabel("time" + (i - 11 * 22 + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
@@ -198,7 +187,7 @@ def init_graph(length):
 def draw_graph(driver, ls, x, ys, i):
 
     clustor = select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i)
-    print("----------- cluster data was fetched ! ------------- \n", clustor)
+    print("----------- cluster ", clustors[i],"data was fetched ! ------------- \n", clustor)
     if clustor is None:
         return
     
@@ -216,18 +205,17 @@ def draw_graph(driver, ls, x, ys, i):
         el_inducted = int(inducted[j])
         el_stowed  = int(stowed[j])
         el_total = el_inducted + el_stowed
-        
 
-        result = 0
+        result = 0 if len(history["dtotal_by_dt"]) == 0 else history["dtotal_by_dt"][idx][-1]
 
         if len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0:
+            print('----- len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0 -----')
             previous_total    = history["total"][idx][-1]
             previous_datetime = history["datetime"][i][-1]
 
             delta_total = el_total - previous_total
             delta_time  = (dt_fetch - previous_datetime).total_seconds() / 60
 
-            print("--------------- Error divided by zero ---------------")
             print("total: ", el_total)
             print("previous: ", previous_total)
             print("diff", delta_total)
@@ -247,10 +235,10 @@ def draw_graph(driver, ls, x, ys, i):
 
         print("now :",dt_fetch)
 
-        print(history["inducted"][idx])
-        print(history["stowed"][idx])
-        print(history["datetime"][i])
-        print("", history["dtotal_by_dt"][idx].append(result))
+        print("インダクション：", history["inducted"][idx])
+        print("ストー済み:", history["stowed"][idx])
+        print("時刻：", history["datetime"][i])
+        print("ｙ軸：", history["dtotal_by_dt"][idx])
 
         # ys[idx].pop(0) 
         # ys[idx].append(result)
@@ -263,8 +251,6 @@ def draw_graph(driver, ls, x, ys, i):
 
     print(history)
     plt.pause(1)
-
-    return ls, x, ys
 
 
 if __name__ == "__main__":
