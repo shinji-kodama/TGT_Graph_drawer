@@ -123,21 +123,26 @@ def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
 
 def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
     time.sleep(2)
-    aisle_els = get_elems_by_css(driver, aisle_css, 10)
-    aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
-    
-    aisles      = [el.text for el in aisle_els]
-    aisle_elems = [el.text for el in aisle_elem_els]
-    inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
-    stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
+    try:
+        aisle_els = get_elems_by_css(driver, aisle_css, 10)
+        aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
+        
+        aisles      = [el.text for el in aisle_els]
+        aisle_elems = [el.text for el in aisle_elem_els]
+        inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
+        stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
 
-    if aisles[0][0] != clustors[i]:
-        print("Error!! skip this cluster:", clustors[i])
+        if aisles[0][0] != clustors[i]:
+            print("Error!! skip this cluster:", clustors[i])
+            return None
+        
+        now = dt.datetime.now()
+
+        return {"aisles": aisles, "inducted": inducted, "stowed": stowed, "datetime": now }
+        
+    except Exception as e:
+        print("error:", e)
         return None
-    
-    now = dt.datetime.now()
-
-    return {"aisles": aisles, "inducted": inducted, "stowed": stowed, "datetime": now }
 
 def click_back_btn(driver, back_css):
     back_btn = get_elem_by_css(driver, back_css, 10)
