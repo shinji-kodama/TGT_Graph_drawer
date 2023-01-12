@@ -187,9 +187,9 @@ def init_graph(length):
     ls_i = []
     ls_h = []
     for i in range(length):
-        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="red")
-        lines_i, = axs[i].plot(x_i, ys_i[i], linewidth=1, marker=".", markersize=4, color="blue", linestyle="dotted")
-        lines_h, = axs[i].plot(x_h, y_h, linewidth=1, marker=".", markersize=1, color="gray", linestyle="dashed")
+        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="darkred")
+        lines_i, = axs[i].plot(x_i, ys_i[i], linewidth=1, marker=".", markersize=1, color="lightcyan", linestyle="dotted")
+        lines_h, = axs[i].plot(x_h, y_h, linewidth=1, marker="None", color="gray", linestyle="dashed")
         ls.append(lines)
         ls_i.append(lines_i)
         ls_h.append(lines_h)
@@ -256,7 +256,7 @@ def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
         print("x", idx, ":", x)
         print("y", idx, ":", history["dtotal_by_dt"][idx])
         ls[idx].set_data(x, history["dtotal_by_dt"][idx])
-        ls_i[idx].set_data(x, history["inducted"][idx])
+        ls_i[idx].set_data(x, list(map(lambda x: x / 10, history["inducted"][idx])))
 
     plt.pause(0.1)
 
