@@ -189,9 +189,10 @@ def init_graph(length):
 def draw_graph(driver, ls, x, ys, i):
 
     clustor = select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i)
-    print("----------- cluster ", clustors[i],"data was fetched ! ------------- \n", clustor)
     if clustor is None:
+        print("clustor is Total, skip it ...")
         return
+    print("----------- cluster ", clustors[i], "data was fetched ! ------------- \n", clustor)
     
     aisles = clustor["aisles"]
     inducted = clustor["inducted"]
@@ -208,12 +209,18 @@ def draw_graph(driver, ls, x, ys, i):
         el_stowed  = int(stowed[j])
         el_total = el_inducted + el_stowed
 
-        result = 0 if len(history["dtotal_by_dt"]) == 0 else history["dtotal_by_dt"][idx][-1]
+        result = 0 if len(history["dtotal_by_dt"][idx]) == 0 else history["dtotal_by_dt"][idx][-1]
 
         if len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0:
             print('----- len(history["datetime"][i]) > 1 and len(history["total"][idx]) > 0 -----')
+            print("history[Datetime] 216行目 :", history["datetime"][i])
+
             previous_total    = history["total"][idx][-1]
-            previous_datetime = history["datetime"][i][-1]
+            previous_datetime = 0
+            if j == 0:
+                previous_datetime = history["datetime"][i][-2]
+            else:
+                previous_datetime = history["datetime"][i][-1]
 
             delta_total = el_total - previous_total
             delta_time  = (dt_fetch - previous_datetime).total_seconds() / 60
@@ -234,6 +241,8 @@ def draw_graph(driver, ls, x, ys, i):
         history["dtotal_by_dt"][idx].append(result)
         if j == 0:
             history["datetime"][i].append(dt_fetch)
+
+        print("history[Datetime] 245行目 :", history["datetime"][i])
 
         print("now :",dt_fetch)
 
