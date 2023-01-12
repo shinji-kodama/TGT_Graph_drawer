@@ -74,11 +74,8 @@ def get_element_in_iframe(driver, iframe, css):
 def move_to_stow_breakdown(driver, iframe_css, elem_css):
     print("----- move_to_stow_breakdown -------")
 
-    iframe = find_iframe(driver, iframe_css)
-    driver.switch_to.frame(iframe)
-    wait = WebDriverWait(driver, 10)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, elem_css)))
-    elements = driver.find_elements(By.CSS_SELECTOR, elem_css)
+    enter_iframe(driver, iframe_css)
+    elements = get_elem_by_css(driver, elem_css, 10)
 
     for el in elements:
         span = el.find_element(By.CSS_SELECTOR, "span")
@@ -96,9 +93,11 @@ def enter_iframe(driver, iframe_css):
 
 def get_clustors_times(driver, clustor_css):
     try:
+        print("----- get_clustors_times -------")
         times = len(get_elem_by_css(driver, clustor_css, 5))
         return times
-    except:
+    except Exception as e:
+        print("error:", e)
         driver.refresh()
         move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
         enter_iframe(driver, iframe_css)
@@ -167,7 +166,7 @@ def init_graph(length):
         # ax.set_title("title" + str(i))
         if i >= 11 * 22:
             ax.set_xticks([-16, -8, 0])
-            ax.set_xlabel("time" + (i - 11 * 22 + 1))
+            ax.set_xlabel("time" + str(i - 11 * 22 + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
