@@ -15,14 +15,14 @@ target_url = "ここにurlを入力する"
 cycle_off_css = ".css-9z1d21"
 cycle_value = ""
 
-cycle1_css = ""
+cycle1_css = ".css-44tx1c"
 cycle2_css = ""
 cycle3_css = ""
 
 iframe_css = "#Stowv2MeridianBlock"
 stow_breakdown_css = ".css-1g8dw35"
 cluster_css = "tbody > .css-xlf10u"
-clusters_css = "tbody > .css-xlf10u > "
+clusters_css = "tbody > .css-xlf10u > .css-y5ti3q"
 aisle_css = "tbody > tr > .css-y5ti3q > span"
 aisle_elem_css = "tbody > tr > .css-af10 > span"
 back_css = ".css-44tx1c"
@@ -50,7 +50,7 @@ def main():
     select_cycle(driver, cycle_off_css)
     clusters = get_clusters(driver, clusters_css)
 
-    fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clusters) * aisle_num)
+    fig, ls, ls_i, ls_h, x, ys  = init_graph(len(all_clusters) * aisle_num)
 
     while True:
         # driver.refresh()
@@ -70,7 +70,12 @@ def select_cycle(driver, css):
     el[1].click()
     divs = driver.find_elements(By.CSS_SELECTOR, "body > div")
     target = divs[len(divs) - 1]
-    print(target.outerHTML)
+    print('エレメント：', target)
+    time.sleep(1)
+    elements = target.find_elements(By.CSS_SELECTOR, cycle1_css)
+    time.sleep(1)
+    print(elements[2].text)
+    elements[2].click()
 
     # select.select_by_value(cycle_value)
 
@@ -137,8 +142,10 @@ def get_elems_by_css(driver, css, sec):
 
 def select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i):
     times = len(get_elems_by_css(driver, cluster_css, 30))
+    print("times: ", times)
     
     if i != times - 1:
+        print("select_cluster : ", i, "/", times - 1)
         # クラスターを選択
         els = get_elems_by_css(driver, cluster_css, 10)
         els[i].click()
@@ -179,6 +186,7 @@ def click_back_btn(driver, back_css):
 
 
 def init_graph(length):
+    print("引数の配列 length: ", length)
     
     fig = plt.figure(figsize=(18, 8))
     plt.subplots_adjust(wspace=0, hspace=0, top=0.95, right=0.95, bottom=0.05, left=0.05)
@@ -186,22 +194,26 @@ def init_graph(length):
     axs = []
     #length個数分のグラフを設定
     for i in range(length):
+        print(i)
         ax = fig.add_subplot(length, 22, (22 * int(i/22)) + 22 - (i % 22))
         ax.set_ylim(0, 15)
         ax.set_xlim(-10, 1)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 21:
+            print("1個目のif : ", i)
             ax.set_yticks([0,10])
-            ax.set_ylabel(clusters[int(i/22)])
+            ax.set_ylabel(all_clusters[int(i/22)])
+            print(all_clusters[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= (length - 1) * 22:
+            print("2個目のif : ", i)
             ax.set_xticks([-8, -4, 0])
             ax.set_xlabel(str(i - 22 * (length - 1) + 1))
+            print(str(i - 22 * (length - 1) + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
-
 
     # 初期値をここでセット
     x  = [0]
@@ -222,9 +234,12 @@ def init_graph(length):
         ls_i.append(lines_i)
         ls_h.append(lines_h)
     
+    print("init graph was finished !")
+    
     return fig, ls, ls_i, ls_h, x, ys
 
 def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
+    print("draw graph was called ! :", i)
 
     cluster = select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i)
     if cluster is None:
