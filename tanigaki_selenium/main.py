@@ -66,9 +66,9 @@ def open_chrome():
     return driver
 
 def select_cycle(driver, css):
-    el = driver.find_element(By.CSS_SELECTOR, css)
-    el.click()
-    divs = driver.find_element(By.CSS_SELECTOR, "body > div")
+    el = driver.find_elements(By.CSS_SELECTOR, css)
+    el[1].click()
+    divs = driver.find_elements(By.CSS_SELECTOR, "body > div")
     target = divs[len(divs) - 1]
     print(target.outerHTML)
 
