@@ -47,7 +47,7 @@ def main():
 
     move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
     enter_iframe(driver, iframe_css)
-
+    select_cycle(driver, cycle_off_css)
     clusters = get_clusters(driver, clusters_css)
 
     fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clusters) * aisle_num)
