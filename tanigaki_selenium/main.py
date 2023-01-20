@@ -12,8 +12,13 @@ import numpy as np
 import datetime as dt
 
 target_url = "ここにurlを入力する"
-cycle_css = ""
+cycle_off_css = ".css-9z1d21"
 cycle_value = ""
+
+cycle1_css = ""
+cycle2_css = ""
+cycle3_css = ""
+
 iframe_css = "#Stowv2MeridianBlock"
 stow_breakdown_css = ".css-1g8dw35"
 cluster_css = "tbody > .css-xlf10u"
@@ -42,6 +47,7 @@ def main():
 
     move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
     enter_iframe(driver, iframe_css)
+
     clusters = get_clusters(driver, clusters_css)
 
     fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clusters) * aisle_num)
@@ -60,9 +66,13 @@ def open_chrome():
     return driver
 
 def select_cycle(driver, css):
-    el = driver.find_element(By.CSS_SELECTOR, css).click()
-    select = Select(el)
-    select.select_by_value(cycle_value)
+    el = driver.find_element(By.CSS_SELECTOR, css)
+    el.click()
+    divs = driver.find_element(By.CSS_SELECTOR, "body > div")
+    target = divs[len(divs) - 1]
+    print(target.outerHTML)
+
+    # select.select_by_value(cycle_value)
 
 def find_iframe(driver, css):
     wait = WebDriverWait(driver, 10)
