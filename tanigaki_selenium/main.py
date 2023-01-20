@@ -43,12 +43,14 @@ history = {
 options = webdriver.ChromeOptions()
 
 def main():
+    number = input("CYCLEの値を入力してください(1, 2, 3) : ")
+    print("number: ", number)
     driver = open_chrome()
 
     move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
     enter_iframe(driver, iframe_css)
-    select_cycle(driver, cycle_off_css)
-    clusters = get_clusters(driver, clusters_css)
+    select_cycle(driver, cycle_off_css, int(number))
+    get_clusters(driver, clusters_css)
 
     fig, ls, ls_i, ls_h, x, ys  = init_graph(len(all_clusters) * aisle_num)
 
@@ -65,7 +67,7 @@ def open_chrome():
     driver.maximize_window()
     return driver
 
-def select_cycle(driver, css):
+def select_cycle(driver, css, n):
     el = driver.find_elements(By.CSS_SELECTOR, css)
     el[1].click()
     divs = driver.find_elements(By.CSS_SELECTOR, "body > div")
@@ -74,8 +76,8 @@ def select_cycle(driver, css):
     time.sleep(1)
     elements = target.find_elements(By.CSS_SELECTOR, cycle1_css)
     time.sleep(1)
-    print(elements[2].text)
-    elements[2].click()
+    print(elements[n].text)
+    elements[n].click()
 
     # select.select_by_value(cycle_value)
 
@@ -127,9 +129,9 @@ def get_clusters_times(driver, cluster_css):
 
 def get_clusters(driver, css):
     els = get_elems_by_css(driver, css, 5)
-    cluster = [el.text for el in els]
-    return cluster
-
+    for el in els:
+        clusters.append(el.text)
+    
 def get_elem_by_css(driver, css, sec):
     wait = WebDriverWait(driver, sec)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
@@ -159,26 +161,32 @@ def select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i):
 
 def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
     time.sleep(2)
-    try:
-        aisle_els = get_elems_by_css(driver, aisle_css, 10)
-        aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
-        
-        aisles      = [el.text for el in aisle_els]
-        aisle_elems = [el.text for el in aisle_elem_els]
-        inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
-        stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
+    # try:
+    aisle_els = get_elems_by_css(driver, aisle_css, 10)
+    aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
+    
+    aisles      = [el.text for el in aisle_els]
+    aisle_elems = [el.text for el in aisle_elem_els]
+    print("aisle_els: ", aisle_els)
+    print("aisle_elems: ", aisle_elems)
+    inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
+    stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
 
-        if aisles[0][0] != clusters[i]:
-            print("Error!! skip this cluster:", clusters[i])
-            return None
-        
-        now = dt.datetime.now()
+    print("aisles: ",i,"番目")
+    print("aisles: ", aisles[0])
+    print("clusters[i]: ", clusters[i])
 
-        return {"aisles": aisles, "inducted": inducted, "stowed": stowed, "datetime": now }
-        
-    except Exception as e:
-        print("error:", e)
+    if aisles[0][0] != clusters[i]:
+        print("Error!! skip this cluster:", clusters[i])
         return None
+    
+    now = dt.datetime.now()
+
+    return {"aisles": aisles, "inducted": inducted, "stowed": stowed, "datetime": now }
+        
+    # except Exception as e:
+    #     print("error:", e)
+    #     return None
 
 def click_back_btn(driver, back_css):
     back_btn = get_elem_by_css(driver, back_css, 10)
@@ -195,7 +203,7 @@ def init_graph(length):
     #length個数分のグラフを設定
     for i in range(length):
         print(i)
-        ax = fig.add_subplot(length, 22, (22 * int(i/22)) + 22 - (i % 22))
+        ax = fig.add_subplot(len(all_clusters), 22, (22 * int(i/22)) + 22 - (i % 22))
         ax.set_ylim(0, 15)
         ax.set_xlim(-10, 1)
         ax.set_xticks([])
@@ -206,11 +214,11 @@ def init_graph(length):
             ax.set_ylabel(all_clusters[int(i/22)])
             print(all_clusters[int(i/22)])
         # ax.set_title("title" + str(i))
-        if i >= (length - 1) * 22:
+        if i >= (len(all_clusters) - 1) * 22:
             print("2個目のif : ", i)
             ax.set_xticks([-8, -4, 0])
-            ax.set_xlabel(str(i - 22 * (length - 1) + 1))
-            print(str(i - 22 * (length - 1) + 1))
+            ax.set_xlabel(str(i - 22 * (len(all_clusters) - 1) + 1))
+            print(str(i - 22 * (len(all_clusters) - 1) + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
