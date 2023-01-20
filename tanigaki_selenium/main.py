@@ -5,42 +5,50 @@ import chromedriver_binary
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select
 
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
 
 target_url = "ここにurlを入力する"
+cycle_css = ""
+cycle_value = ""
 iframe_css = "#Stowv2MeridianBlock"
 stow_breakdown_css = ".css-1g8dw35"
-clustor_css = "tbody > .css-xlf10u"
+cluster_css = "tbody > .css-xlf10u"
+clusters_css = "tbody > .css-xlf10u > "
 aisle_css = "tbody > tr > .css-y5ti3q > span"
 aisle_elem_css = "tbody > tr > .css-af10 > span"
 back_css = ".css-44tx1c"
 
-clustors = ["A","B","C","D","E","G","H","J","K","L","M","P"]
+all_clusters = ["A","B","C","D","E","G","H","J","K","L","M","P"]
+clusters = []
+max_cluster_num = len(all_clusters)
 aisle_num = 22
 
 history = {
-    "inducted":     [[] for _ in range(aisle_num * len(clustors))],
-    "stowed":       [[] for _ in range(aisle_num * len(clustors))],
-    "total":        [[] for _ in range(aisle_num * len(clustors))],
-    "dtotal_by_dt": [[] for _ in range(aisle_num * len(clustors))],
-    "datetime":     [[] for _ in range(len(clustors))]
+    "inducted":     [[] for _ in range(aisle_num * max_cluster_num)],
+    "stowed":       [[] for _ in range(aisle_num * max_cluster_num)],
+    "total":        [[] for _ in range(aisle_num * max_cluster_num)],
+    "dtotal_by_dt": [[] for _ in range(aisle_num * max_cluster_num)],
+    "datetime":     [[] for _ in range(max_cluster_num)]
 }
 
 options = webdriver.ChromeOptions()
 
 def main():
     driver = open_chrome()
-    fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clustors) * aisle_num)
 
     move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
     enter_iframe(driver, iframe_css)
+    clusters = get_clusters(driver, clusters_css)
+
+    fig, ls, ls_i, ls_h, x, ys  = init_graph(len(clusters) * aisle_num)
 
     while True:
         # driver.refresh()
-        times = get_clustors_times(driver, clustor_css)
+        times = get_clusters_times(driver, cluster_css)
         for i in range(times):
             print("times: ", i, "/", times, "draw_graph ...")
             draw_graph(driver, ls, ls_i, ls_h, x, ys, i)
@@ -50,6 +58,11 @@ def open_chrome():
     driver.get(target_url)
     driver.maximize_window()
     return driver
+
+def select_cycle(driver, css):
+    el = driver.find_element(By.CSS_SELECTOR, css).click()
+    select = Select(el)
+    select.select_by_value(cycle_value)
 
 def find_iframe(driver, css):
     wait = WebDriverWait(driver, 10)
@@ -86,16 +99,21 @@ def enter_iframe(driver, iframe_css):
     iframe = find_iframe(driver, iframe_css)
     driver.switch_to.frame(iframe)
 
-def get_clustors_times(driver, clustor_css):
+def get_clusters_times(driver, cluster_css):
     try:
-        times = len(get_elems_by_css(driver, clustor_css, 5))
+        times = len(get_elems_by_css(driver, cluster_css, 5))
         return times
     except Exception as e:
         print("error:", e)
         driver.refresh()
         move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
         enter_iframe(driver, iframe_css)
-        return get_clustors_times(driver, clustor_css)
+        return get_clusters_times(driver, cluster_css)
+
+def get_clusters(driver, css):
+    els = get_elems_by_css(driver, css, 5)
+    cluster = [el.text for el in els]
+    return cluster
 
 def get_elem_by_css(driver, css, sec):
     wait = WebDriverWait(driver, sec)
@@ -107,12 +125,12 @@ def get_elems_by_css(driver, css, sec):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
     return driver.find_elements(By.CSS_SELECTOR, css)
 
-def select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i):
-    times = len(get_elems_by_css(driver, clustor_css, 30))
+def select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i):
+    times = len(get_elems_by_css(driver, cluster_css, 30))
     
     if i != times - 1:
         # クラスターを選択
-        els = get_elems_by_css(driver, clustor_css, 10)
+        els = get_elems_by_css(driver, cluster_css, 10)
         els[i].click()
         time.sleep(1)
         # クラスターの中のaisleの値を取得
@@ -133,8 +151,8 @@ def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
         inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
         stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
 
-        if aisles[0][0] != clustors[i]:
-            print("Error!! skip this cluster:", clustors[i])
+        if aisles[0][0] != clusters[i]:
+            print("Error!! skip this cluster:", clusters[i])
             return None
         
         now = dt.datetime.now()
@@ -158,18 +176,18 @@ def init_graph(length):
     axs = []
     #length個数分のグラフを設定
     for i in range(length):
-        ax = fig.add_subplot(12, 22, (22 * int(i/22)) + 22 - (i % 22))
+        ax = fig.add_subplot(length, 22, (22 * int(i/22)) + 22 - (i % 22))
         ax.set_ylim(0, 15)
         ax.set_xlim(-10, 1)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 21:
             ax.set_yticks([0,10])
-            ax.set_ylabel(clustors[int(i/22)])
+            ax.set_ylabel(clusters[int(i/22)])
         # ax.set_title("title" + str(i))
-        if i >= 11 * 22:
+        if i >= (length - 1) * 22:
             ax.set_xticks([-8, -4, 0])
-            ax.set_xlabel(str(i - 22 * 11 + 1))
+            ax.set_xlabel(str(i - 22 * (length - 1) + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
@@ -187,8 +205,8 @@ def init_graph(length):
     ls_i = []
     ls_h = []
     for i in range(length):
-        lines,  = axs[i].plot(x, ys[i], linewidth=1, marker=".", markersize=4, color="darkred")
-        lines_i, = axs[i].plot(x_i, ys_i[i], linewidth=1, marker=".", markersize=1, color="lightcyan", linestyle="dotted")
+        lines,  = axs[i].plot(x, ys[i], linewidth=2, marker="o", markersize=4, color="darkred")
+        lines_i, = axs[i].plot(x_i, ys_i[i], linewidth=1, marker=".", markersize=2, color="skyblue", linestyle="dotted")
         lines_h, = axs[i].plot(x_h, y_h, linewidth=1, marker="None", color="gray", linestyle="dashed")
         ls.append(lines)
         ls_i.append(lines_i)
@@ -198,22 +216,22 @@ def init_graph(length):
 
 def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
 
-    clustor = select_cluster(driver, clustor_css, aisle_css, aisle_elem_css, i)
-    if clustor is None:
-        print("clustor is Total, skip it ...")
+    cluster = select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i)
+    if cluster is None:
+        print("cluster is Total, skip it ...")
         return
-    print("----------- cluster ", clustors[i], "data was fetched ! ------------- \n", clustor)
+    print("----------- cluster ", clusters[i], "data was fetched ! ------------- \n", cluster)
     
-    aisles = clustor["aisles"]
-    inducted = clustor["inducted"]
-    stowed = clustor["stowed"]
-    dt_fetch = clustor["datetime"]
+    aisles = cluster["aisles"]
+    inducted = cluster["inducted"]
+    stowed = cluster["stowed"]
+    dt_fetch = cluster["datetime"]
 
     for j, aisle in enumerate(aisles):
         cl = aisle[0]
         num = int(aisle[1:])
 
-        idx = clustors.index(cl) * 22 + num - 1
+        idx = all_clusters.index(cl) * 22 + num - 1
 
         el_inducted = int(inducted[j])
         el_stowed  = int(stowed[j])
