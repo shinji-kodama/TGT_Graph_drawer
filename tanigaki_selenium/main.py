@@ -1,7 +1,8 @@
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium import webdriver
-import chromedriver_binary
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,11 +14,8 @@ import datetime as dt
 
 target_url = "ここにurlを入力する"
 cycle_off_css = ".css-9z1d21"
-cycle_value = ""
 
 cycle1_css = ".css-44tx1c"
-cycle2_css = ""
-cycle3_css = ""
 
 iframe_css = "#Stowv2MeridianBlock"
 stow_breakdown_css = ".css-1g8dw35"
@@ -49,7 +47,7 @@ def main():
 
     move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
     enter_iframe(driver, iframe_css)
-    select_cycle(driver, cycle_off_css, int(number))
+    select_cycle(driver, cycle_off_css, int(number - 1))
     get_clusters(driver, clusters_css)
 
     fig, ls, ls_i, ls_h, x, ys  = init_graph(len(all_clusters) * aisle_num)
@@ -62,7 +60,7 @@ def main():
             draw_graph(driver, ls, ls_i, ls_h, x, ys, i)
 
 def open_chrome():
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     driver.get(target_url)
     driver.maximize_window()
     return driver
@@ -72,14 +70,13 @@ def select_cycle(driver, css, n):
     el[1].click()
     divs = driver.find_elements(By.CSS_SELECTOR, "body > div")
     target = divs[len(divs) - 1]
-    print('エレメント：', target)
+    # print('エレメント：', target)
     time.sleep(1)
     elements = target.find_elements(By.CSS_SELECTOR, cycle1_css)
     time.sleep(1)
-    print(elements[n].text)
+    # print(elements[n].text)
     elements[n].click()
 
-    # select.select_by_value(cycle_value)
 
 def find_iframe(driver, css):
     wait = WebDriverWait(driver, 10)
@@ -121,7 +118,7 @@ def get_clusters_times(driver, cluster_css):
         times = len(get_elems_by_css(driver, cluster_css, 5))
         return times
     except Exception as e:
-        print("error:", e)
+        # print("error:", e)
         driver.refresh()
         move_to_stow_breakdown(driver, iframe_css, stow_breakdown_css)
         enter_iframe(driver, iframe_css)
@@ -144,10 +141,10 @@ def get_elems_by_css(driver, css, sec):
 
 def select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i):
     times = len(get_elems_by_css(driver, cluster_css, 30))
-    print("times: ", times)
+    # print("times: ", times)
     
     if i != times - 1:
-        print("select_cluster : ", i, "/", times - 1)
+        # print("select_cluster : ", i, "/", times - 1)
         # クラスターを選択
         els = get_elems_by_css(driver, cluster_css, 10)
         els[i].click()
@@ -166,18 +163,18 @@ def get_aisle_and_values(driver, aisle_css, aisle_elem_css, i):
     aisle_elem_els = get_elems_by_css(driver, aisle_elem_css, 10)
     
     aisles      = [el.text for el in aisle_els]
+    # print("aisle_els: ", aisle_els)
     aisle_elems = [el.text for el in aisle_elem_els]
-    print("aisle_els: ", aisle_els)
-    print("aisle_elems: ", aisle_elems)
+    # print("aisle_elems: ", aisle_elems)
     inducted    = [el for i, el in enumerate(aisle_elems) if i % 12 == 2]
     stowed      = [el for i, el in enumerate(aisle_elems) if i % 12 == 4]
 
-    print("aisles: ",i,"番目")
-    print("aisles: ", aisles[0])
-    print("clusters[i]: ", clusters[i])
+    print("aisles: ",i,"番目, cluster: ", clusters[i])
+    print("aisles: ", aisles[0][0])
+    # print("clusters[i]: ", clusters[i])
 
     if aisles[0][0] != clusters[i]:
-        print("Error!! skip this cluster:", clusters[i])
+        # print("Error!! skip this cluster:", clusters[i])
         return None
     
     now = dt.datetime.now()
@@ -194,7 +191,7 @@ def click_back_btn(driver, back_css):
 
 
 def init_graph(length):
-    print("引数の配列 length: ", length)
+    # print("引数の配列 length: ", length)
     
     fig = plt.figure(figsize=(18, 8))
     plt.subplots_adjust(wspace=0, hspace=0, top=0.95, right=0.95, bottom=0.05, left=0.05)
@@ -202,23 +199,23 @@ def init_graph(length):
     axs = []
     #length個数分のグラフを設定
     for i in range(length):
-        print(i)
+        # print(i)
         ax = fig.add_subplot(len(all_clusters), 22, (22 * int(i/22)) + 22 - (i % 22))
         ax.set_ylim(0, 15)
         ax.set_xlim(-10, 1)
         ax.set_xticks([])
         ax.set_yticks([])
         if i % 22 == 21:
-            print("1個目のif : ", i)
+            # print("1個目のif : ", i)
             ax.set_yticks([0,10])
             ax.set_ylabel(all_clusters[int(i/22)])
-            print(all_clusters[int(i/22)])
+            # print(all_clusters[int(i/22)])
         # ax.set_title("title" + str(i))
         if i >= (len(all_clusters) - 1) * 22:
-            print("2個目のif : ", i)
+            # print("2個目のif : ", i)
             ax.set_xticks([-8, -4, 0])
             ax.set_xlabel(str(i - 22 * (len(all_clusters) - 1) + 1))
-            print(str(i - 22 * (len(all_clusters) - 1) + 1))
+            # print(str(i - 22 * (len(all_clusters) - 1) + 1))
         # ax.grid(True)
         axs.append(ax)
         ax.plot()
@@ -242,18 +239,18 @@ def init_graph(length):
         ls_i.append(lines_i)
         ls_h.append(lines_h)
     
-    print("init graph was finished !")
+    # print("init graph was finished !")
     
     return fig, ls, ls_i, ls_h, x, ys
 
 def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
-    print("draw graph was called ! :", i)
+    # print("draw graph was called ! :", i)
 
     cluster = select_cluster(driver, cluster_css, aisle_css, aisle_elem_css, i)
     if cluster is None:
         print("cluster is Total, skip it ...")
         return
-    print("----------- cluster ", clusters[i], "data was fetched ! ------------- \n", cluster)
+    # print("----------- cluster ", clusters[i], "data was fetched ! ------------- \n", cluster)
     
     aisles = cluster["aisles"]
     inducted = cluster["inducted"]
@@ -293,19 +290,15 @@ def draw_graph(driver, ls, ls_i, ls_h, x, ys, i):
         if j == 0:
             history["datetime"][i].append(dt_fetch)
 
-        print("history[Datetime] 245行目 :", history["datetime"][i])
-
-        print("now :",dt_fetch)
-
-        print("インダクション：", history["inducted"][idx])
-        print("ストー済み:", history["stowed"][idx])
-        print("時刻：", history["datetime"][i])
+        # print("インダクション：", history["inducted"][idx])
+        # print("ストー済み:", history["stowed"][idx])
+        # print("時刻：", history["datetime"][i])
 
         # ys[idx].pop(0) 
         # ys[idx].append(result)
         x = list(map(lambda t: (t - dt_fetch).total_seconds() / 60 , history["datetime"][i]))
-        print("x", idx, ":", x)
-        print("y", idx, ":", history["dtotal_by_dt"][idx])
+        # print("x", idx, ":", x)
+        # print("y", idx, ":", history["dtotal_by_dt"][idx])
         ls[idx].set_data(x, history["dtotal_by_dt"][idx])
         ls_i[idx].set_data(x, list(map(lambda x: x / 10, history["inducted"][idx])))
 
